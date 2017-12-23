@@ -1,0 +1,22 @@
+{
+  "name": "genetic-evolution",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server",
+    "build": "webpack"
+  },
+  "author": "Andy Krivovjas",
+  "license": "MIT",
+  "dependencies": {
+    "fpsmeter": "^0.3.1"
+  },
+  "devDependencies": {
+    "@types/fpsmeter": "^0.3.29",
+    "ts-loader": "^3.2.0",
+    "typescript": "^2.6.2",
+    "webpack": "^3.10.0",
+    "webpack-dev-server": "^2.9.7"
+  }
+}
