@@ -13,6 +13,7 @@ export class App {
 
     vehicles: Vehicle[] = [];
     food: Food[] = [];
+    foodHashTable = {};
 
     constructor(private initCallback?: Function, private renderCallback?: Function) {
         this.meter = new FPSMeter();
@@ -36,7 +37,7 @@ export class App {
 
     setCanvasEvents() {
         this.canvas.body.addEventListener('click', this.mouseClicked);
-        this.canvas.body.addEventListener('mousemove', this.mouseMove);
+        // this.canvas.body.addEventListener('mousemove', this.mouseMove);
     }
 
     render = () => {
@@ -48,10 +49,17 @@ export class App {
             this.renderCallback(this.canvas);
         }
 
-        M.fireAtRate(0.01, () => this.addFood());
+        M.fireAtRate(0.1, () => this.addFood());
 
-        this.vehicles.forEach(element => {
-            element.update();
+        this.vehicles.forEach(vehicle => {
+            vehicle.update();
+            let closest = vehicle.findClosestFood(this.food);
+            if(closest) {
+                if(vehicle.eat(closest)) {
+                    // console.log(closest, this);
+                    this.removeFood(closest);
+                }
+            }
         });
 
         this.canvas.renderAll();
@@ -65,6 +73,9 @@ export class App {
         this.addVehicle(
             new Vector(event.x, event.y)
         );
+        // this.addFood(
+        //     new Vector(event.x, event.y)
+        // );
     }
 
     mouseMove = (event: MouseEvent) => {
@@ -88,7 +99,7 @@ export class App {
             position
         );
 
-        this.canvas.add(vehicle.body);
+        this.canvas.add(vehicle.body, 10);
         this.vehicles.push(vehicle);
     }
 
@@ -98,8 +109,24 @@ export class App {
             position
         );
 
-        this.canvas.add(food.body);
+        this.canvas.add(food.body, 1);
         this.food.push(food);
+        food.setId(this.food.length - 1 + '_' + +new Date());
+
+        this.reindexFood();
+    }
+
+    removeFood(food: Food) {
+        this.canvas.remove(food.body, 1);
+        this.food.splice(this.foodHashTable[food.id], 1);
+
+        this.reindexFood();
+    }
+
+    reindexFood() {
+        for(let i = 0; i < this.food.length; i ++) {
+            this.foodHashTable[this.food[i].id] = i;
+        }
     }
 
 }

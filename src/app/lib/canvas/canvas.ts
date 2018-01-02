@@ -9,6 +9,7 @@ export class Canvas {
     body: HTMLCanvasElement;
     private background: string = '#fff';
     private objects: BaseObject[] = [];
+    private layers: any = {};
     
     draw: CanvasDraw;
     context: CanvasRenderingContext2D;
@@ -26,8 +27,19 @@ export class Canvas {
         this.draw = new CanvasDraw(this);
     }
 
-    add(obj: BaseObject) {
-        this.objects.push(obj);
+    add(obj: BaseObject, layer: number = 0) {
+        // this.objects.push(obj); 
+
+        this.layers[layer] = this.layers[layer] || [];
+        this.layers[layer].push(obj);
+    }
+
+    remove(obj: BaseObject, layer: number = 0) {
+        this.layers[layer] = this.layers[layer] || [];
+        let i = this.layers[layer].indexOf(obj);
+        if(i !== -1) {
+            this.layers[layer].splice(i, 1);
+        }
     }
 
     setBackground(color: string) {
@@ -41,9 +53,15 @@ export class Canvas {
         this.context.fillRect(0, 0, this.body.width, this.body.height);
     }
 
-    renderAll() {
-        this.objects.forEach(obj => {
+    render(layer: number = 0) {
+        this.layers[layer].forEach(obj => {
             obj.render();
         });
+    }
+
+    renderAll() {
+        for(let layer in this.layers) {
+            this.render(parseInt(layer));
+        }
     }
 }

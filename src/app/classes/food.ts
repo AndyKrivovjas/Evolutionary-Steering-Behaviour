@@ -8,6 +8,7 @@ export class Food extends Particle {
     index: number;
 
     radius: number = 5;
+    value: number = 0;
 
     constructor(draw: CanvasDraw, position?: Vector) {
         super();
@@ -22,7 +23,15 @@ export class Food extends Particle {
             this.radius
         );
 
-        this.body.styles.fill = '#88d8b0';
+        this.body.setParent(this);
+
+        this.value = M.randomInt(-10, 10);
+
+        if(this.value > 0) {
+            this.body.styles.fill = '#88d8b0';
+        } else {
+            this.body.styles.fill = '#F15456';
+        }
     }
 
 }

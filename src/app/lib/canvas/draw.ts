@@ -14,6 +14,7 @@ export class BaseObject {
     ctx: CanvasRenderingContext2D;
     position: Vector;
     type: PRIMITIVES;
+    parent: any;
 
     styles: {
         strokeColor?: string,
@@ -51,6 +52,10 @@ export class BaseObject {
         this.applyStyles();
         this.ctx.closePath();
         this.ctx.restore();
+    }
+
+    setParent(p: any) {
+        this.parent = p;
     }
 
     render() {

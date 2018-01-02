@@ -2,6 +2,7 @@ import { Particle } from "./particle";
 import { Vector } from "../lib/math/vector";
 import { CanvasDraw, Triangle } from "../lib/canvas/draw";
 import { M } from "../lib/math/m";
+import { Food } from "./food";
 
 export class Vehicle extends Particle {
     body: Triangle;
@@ -11,10 +12,13 @@ export class Vehicle extends Particle {
     velocity: Vector;
     acceleration: Vector;
     maxSpeed: number = 4;
-    maxForce: number = 0.1;
+    maxForce: number = 0.2;
 
     width: number = 15;
     height: number = 25;
+    health: number = 100;
+
+    targetDistance: number = 0;
 
     constructor(draw: CanvasDraw, position?: Vector) {
         super();
@@ -29,7 +33,7 @@ export class Vehicle extends Particle {
             this.width,
             this.height
         );
-        this.body.styles.strokeColor = '#000';
+        this.body.styles.strokeColor = '#fff';
 
         this.velocity = new Vector(0, 0);
         this.acceleration = new Vector(0, 0);
@@ -56,8 +60,7 @@ export class Vehicle extends Particle {
         this.body.angle = theta;
 
         // Slowly die unless you eat
-        // this.health -= 0.002;
-
+        this.health -= 0.02;
     }
 
     applyForce(force: Vector) {
@@ -67,7 +70,6 @@ export class Vehicle extends Particle {
     seek(target: Vector) {
 
         var desired = target.copy().subtract(this.body.position); // A vector pointing from the location to the target
-
         desired.setMagnitude(this.maxSpeed);
 
         // Steering = Desired minus velocity
@@ -77,6 +79,38 @@ export class Vehicle extends Particle {
         steer.limit(this.maxForce);
 
         return steer;
+    }
+
+    findClosestFood(list: Food[]): Food {
+        let food: Food = null;
+        let fisrtItem = list.slice().shift();
+
+        if(fisrtItem) {
+            let minDist = this.body.position.dist(fisrtItem.body.position);
+    
+            list.forEach(item => {
+                let d = this.body.position.dist(item.body.position);
+                if(d <= minDist) {
+                    minDist = d;
+                    food = item;
+                    this.targetDistance = minDist;
+                }
+            });
+        }
+
+        return food;
+    }
+
+    eat(food: Food):boolean {
+        this.setTarget(food.body.position);
+
+        if(this.targetDistance < 5) {
+            this.health += food.value;
+
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }
