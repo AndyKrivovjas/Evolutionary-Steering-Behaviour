@@ -11,7 +11,10 @@ export class App {
     frame: number = 0;
     canvas: Canvas;
 
+    maxPopulation: number = 10;
+
     vehicles: Vehicle[] = [];
+    vehicleHashTable = {};
     food: Food[] = [];
     foodHashTable = {};
 
@@ -26,7 +29,7 @@ export class App {
         });
         this.canvas.setBackground('#555');
 
-        this.addVehicle(new Vector(100, 100));
+        this.createVehicle();
 
         this.setCanvasEvents();
 
@@ -49,14 +52,30 @@ export class App {
             this.renderCallback(this.canvas);
         }
 
-        M.fireAtRate(0.1, () => this.addFood());
+        let rate = 1 / (this.food.length * 0.01);
+        if(rate > 1) rate = 1;
+        M.fireAtRate(rate, () => this.createFood());
+
+        this.food.forEach(f => {
+            f.followers = [];
+        });
 
         this.vehicles.forEach(vehicle => {
+            vehicle.boundaries(this.canvas.body.width, this.canvas.body.height);
             vehicle.update();
+            M.fireAtRate(0.001, () => {
+                if (this.vehicles.length < this.maxPopulation) {
+                    let child = vehicle.clone();
+                    this.addVehicle(child);
+                }
+            });
+
+            if(vehicle.health == 0) {
+                this.removeVehicle(vehicle);
+            }
             let closest = vehicle.findClosestFood(this.food);
             if(closest) {
                 if(vehicle.eat(closest)) {
-                    // console.log(closest, this);
                     this.removeFood(closest);
                 }
             }
@@ -70,12 +89,14 @@ export class App {
     }
 
     mouseClicked = (event: MouseEvent) => {
-        this.addVehicle(
+        if(this.vehicles.length == this.maxPopulation) {
+            let index = M.randomInt(this.vehicles.length);
+            this.removeVehicle(this.vehicles[index]);
+        }
+
+        this.createVehicle(
             new Vector(event.x, event.y)
         );
-        // this.addFood(
-        //     new Vector(event.x, event.y)
-        // );
     }
 
     mouseMove = (event: MouseEvent) => {
@@ -93,17 +114,44 @@ export class App {
 
     /* ----------------------------------Components----------------------------------- */
 
-    addVehicle(position?: Vector) {
-        var vehicle = new Vehicle(
-            this.canvas.draw,
-            position
-        );
+    createVehicle(position?: Vector) {
+        if (this.vehicles.length < this.maxPopulation) {
+            let v = new Vehicle(
+                this.canvas.draw,
+                position
+            );
 
-        this.canvas.add(vehicle.body, 10);
-        this.vehicles.push(vehicle);
+            this.addVehicle(v);
+        }
     }
 
-    addFood(position?: Vector) {
+    addVehicle(vehicle?: Vehicle) {
+        this.canvas.add(vehicle.body, 10);
+        this.vehicles.push(vehicle);
+
+        vehicle.setId(Math.random().toString(36).substring(7) + '_' + +new Date());
+        vehicle.setApplication(this);
+        
+        this.reindexVehicle();
+    }
+
+    removeVehicle(vehicle: Vehicle) {
+        vehicle.elements.forEach(e => {
+            this.canvas.remove(e);
+        });
+        this.canvas.remove(vehicle.body, 10);
+        this.vehicles.splice(this.vehicleHashTable[vehicle.id], 1);
+
+        this.reindexVehicle();
+    }
+
+    reindexVehicle() {
+        for (let i = 0; i < this.vehicles.length; i++) {
+            this.vehicleHashTable[this.vehicles[i].id] = i;
+        }
+    }
+
+    createFood(position?: Vector) {
         var food = new Food(
             this.canvas.draw,
             position

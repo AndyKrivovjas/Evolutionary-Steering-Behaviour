@@ -11,6 +11,16 @@ export class M {
         return rand;
     }
 
+    static randomFloat(min: number, max?: number): number {
+        if (!max) {
+            max = min;
+            min = 0;
+        }
+
+        var rand = min + Math.random() * (max + 1 - min);
+        return rand;
+    }
+
     static fireAtRate(percent: number, callback: Function) {
         if (Math.random() < percent) {
             callback();
